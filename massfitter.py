@@ -31,6 +31,7 @@ def build_fits():
     for sheet in wb_fittings.worksheets:
         if sheet.title != "Overall":
             # Columns loop
+            # print str(sheet.max_column) + " / " + str(sheet.max_row)
             for col in sheet.iter_cols(min_row=1, max_col=sheet.max_column, max_row=sheet.max_row):
                 xml_single_fit = ET.SubElement(xml_fittings, "fitting")
                 ET.SubElement(xml_single_fit, "description", value="")
@@ -47,12 +48,14 @@ def build_fits():
                 for index, cell in enumerate(col):
                     # Grab fitting header
                     if index == 1:
+                        # print cell.value
                         fit_header = cell.value[1:-1].split(', ')
                         xml_single_fit.set("name", fit_header[1] + " " + fit_header[0])
                         ET.SubElement(xml_single_fit, "shipType", value=fit_header[0])
                     elif index > 1:
                         if cell.value:
                             # Parse drones and cargo items
+                            # print cell.value
                             if slots[slots_index] is "cargo":
                                 slot_item = cell.value.lower()
                                 if any(slot_item.find(d) >= 0 for d in drones):
@@ -62,6 +65,9 @@ def build_fits():
                                     slot_position += 1
                                 else:
                                     cargo_item = cell.value.split(' x')
+                                    #print len(cargo_item)
+                                    if len(cargo_item) < 2:
+                                        cargo_item.append("1")
                                     ET.SubElement(xml_single_fit, "hardware", qty=cargo_item[1],
                                                   slot=slots[slots_index], type=cargo_item[0])
                                     slot_position += 1
@@ -69,7 +75,7 @@ def build_fits():
                             else:
                                 slot_item = cell.value.split(', ')[0]
 
-                                if "[empty " not in slot_item:
+                                if "[empty " not in slot_item.lower():
                                     ET.SubElement(xml_single_fit, "hardware",
                                                   slot=slots[slots_index] + str(slot_position),
                                                   type=slot_item.lstrip())
